@@ -1,0 +1,22 @@
+{
+    "mode": "release",
+    "secret": "",
+    "lisk": {
+        "address": "",
+        "passphrase": "",
+        "secondPassphrase": "",
+        "transactionLimit": 100
+    },
+    "mongo": {
+        "url": "",
+        "db": "",
+        "user": "",
+        "password": "",
+        "collectionUser": "",
+        "collectionHistory": "",
+        "collectionLiskTrx": "",
+        "collectionMentionId": "",
+        "collectionLimitCtrl": "",
+        "collectionFriends": ""
+    }
+}

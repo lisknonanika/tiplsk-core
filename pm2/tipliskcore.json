@@ -1,0 +1,10 @@
+{
+    "name" : "TipLiskCore",
+    "script" : "./api.js",
+    "env" : {
+        "NODE_ENV" : "default"
+    },
+    "env_release" : {
+        "NODE_ENV" : "release"
+    }
+}
