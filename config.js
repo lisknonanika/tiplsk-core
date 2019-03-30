@@ -2,7 +2,7 @@ const lisk = require('@liskhq/lisk-api-client');
 const liskTransaction = require('@liskhq/lisk-transactions');
 const config = require('config');
 
-function define(name, value) {
+const define = (name, value) => {
     Object.defineProperty(exports, name, {
         value: value,
         enumerable: false,
@@ -11,15 +11,22 @@ function define(name, value) {
     });
 }
 
+// App Setting
 define('mode', config.mode);
-define('lisk', config.lisk);
-define('mongo', config.mongo);
+define('secret', config.secret);
 
-//var liskClient = lisk.APIClient.createTestnetAPIClient();
-var liskClient = lisk.APIClient.createMainnetAPIClient();
-define('LiskClient', liskClient);
+// Lisk Setting
+define('lisk', config.lisk);
+if (config.mode === 'test') {
+    console.log('test mode!');
+    define('LiskClient', lisk.APIClient.createTestnetAPIClient());
+} else {
+    console.log('releae mode!');
+    define('LiskClient', lisk.APIClient.createMainnetAPIClient());
+}
 define('LiskTransaction', liskTransaction);
 
-var mongoClientParams = {auth:{user: config.mongo.user, password: config.mongo.password},
-                         authSource: config.mongo.db, useNewUrlParser: true}
-define('mongoClientParams', mongoClientParams);
+// MongoDB Setting
+define('mongo', config.mongo);
+define('mongoClientParams', {auth:{user: config.mongo.user, password: config.mongo.password},
+                             authSource: config.mongo.db, useNewUrlParser: true});

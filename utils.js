@@ -2,6 +2,13 @@ const BigNumber = require('bignumber.js');
 const CryptoJs = require('crypto-js');
 
 /**
+ * Check Empty
+ */
+module.exports.isEmpty = function(val) {
+    return !val || Object.keys(val).length === 0;
+}
+
+/**
  * Check Number
  */
 module.exports.isNumber = function(val) {

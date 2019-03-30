@@ -6,6 +6,7 @@ const config = require('./config');
 const utils = require('./utils');
 const user = require('./db/user');
 const history = require('./db/history');
+const liskTransaction = require('./lisk/transaction');
 const verify = require('./verify');
 const cst = require('./const');
 
@@ -23,12 +24,12 @@ app.use('/core', router);
  */
 router.post('/auth', function(req, res) {
     (async () => {
-        if (!req.query || !req.query.id || !req.query.pw) {
+        if (!req.body || !req.body.id || !req.body.pw) {
             res.json({result: false, error: 'Required parameter missing or invalid.'});
             return;
         }
-        const result = await user.find({_id: req.query.id});
-        if (!result || !result.password || result.password !== utils.sha256(req.query.pw)) {
+        const result = await user.find({_id: req.body.id});
+        if (!result || !result.password || result.password !== utils.sha256(req.body.pw)) {
             res.json({result: false, error: "Authentication failed."});
             return;
         }
@@ -50,7 +51,9 @@ router.get('/user', verify, function(req, res) {
             return;
         }
         const result = await user.find({twitterId: req.query.twitterId});
-        result.result = true,
+        result.result = true;
+        result.userId = result._id;
+        delete result._id;
         delete result.password;
         res.json(result);
     })().catch((err) => {
@@ -86,43 +89,43 @@ router.get('/history', verify, function(req, res) {
  */
 router.put('/tip', verify, function(req, res) {
     (async () => {
-        if (!req.query || !utils.isDecimal(req.query.amount) ||
-            !req.query.senderId || !req.query.senderNm || 
-            !req.query.receiptId || !req.query.receiptNm) {
+        if (!req.body || !utils.isDecimal(req.body.amount) ||
+            !req.body.senderId || !req.body.senderNm || 
+            !req.body.receiptId || !req.body.receiptNm) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
             return;
         }
         
         // 送信者の情報を取得
-        const senderInfo = await user.find({twitterId: req.query.senderId});
-        if (!senderInfo || !senderInfo._id) {
-            await user.createUser(req.query.senderId);
+        const senderInfo = await user.find({twitterId: req.body.senderId});
+        if (utils.isEmpty(senderInfo)) {
+            await user.createUser(req.body.senderId);
             res.json({result: true, resultType: cst.RETURN_TYPE_NOT_ENOUGH});
             return;
         }
 
         // 送信後の枚数計算
-        const senderAmount = utils.minus(senderInfo.amount, req.query.amount);
+        const senderAmount = utils.minus(senderInfo.amount, req.body.amount);
         if (+senderAmount <= 0) {
             res.json({result: true, resultType: cst.RETURN_TYPE_NOT_ENOUGH});
             return;
         }
 
         // 受診者の情報を取得
-        const receiptInfo = await user.find({twitterId: req.query.receiptId});
-        if (!receiptInfo || !receiptInfo._id) {
-            await user.createUser(req.query.receiptId);
+        const receiptInfo = await user.find({twitterId: req.body.receiptId});
+        if (utils.isEmpty(receiptInfo)) {
+            await user.createUser(req.body.receiptId);
             receiptInfo.amount = '0';
         }
 
         // 受信後の枚数計算
-        const receiptAmount = utils.plus(receiptInfo.amount, req.query.amount);
+        const receiptAmount = utils.plus(receiptInfo.amount, req.body.amount);
 
         // 送信者・受診者の枚数更新＆履歴登録
-        await user.updateAmount(req.query.senderId, senderAmount);
-        await user.updateAmount(req.query.receiptId, receiptAmount);
-        await history.insert(req.query.senderId, req.query.receiptNm, utils.num2str(req.query.amount), cst.TYPE_SEND);
-        await history.insert(req.query.receiptId, req.query.senderNm, utils.num2str(req.query.amount), cst.TYPE_RECEIVE);
+        await user.updateAmount(req.body.senderId, senderAmount);
+        await user.updateAmount(req.body.receiptId, receiptAmount);
+        await history.insert(req.body.senderId, req.body.receiptNm, utils.num2str(req.body.amount), cst.TYPE_SEND);
+        await history.insert(req.body.receiptId, req.body.senderNm, utils.num2str(req.body.amount), cst.TYPE_RECEIVE);
 
         res.json({result: true});
     })().catch((err) => {
@@ -136,14 +139,47 @@ router.put('/tip', verify, function(req, res) {
  */
 router.put('/withdraw', verify, function(req, res) {
     (async () => {
-        if (!req.query || !req.query.sender || !req.query.receipt || !utils.isDecimal(amount)) {
+        if (!req.body || !req.body.senderId || !req.body.liskAddress || !utils.isDecimal(req.body.amount)) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
             return;
         }
         
-        // TODO
+        // 送信者の情報を取得
+        const senderInfo = await user.find({twitterId: req.body.senderId});
+        if (utils.isEmpty(senderInfo)) {
+            await user.createUser(req.body.senderId);
+            res.json({result: true, resultType: cst.RETURN_TYPE_NOT_ENOUGH});
+            return;
+        }
+        
+        // Liskトランザクション作成
+        const trx = liskTransaction.createTransaction(req.body.liskAddress, req.body.amount);
+        if (utils.isEmpty(trx)) {
+            res.json({result: true, resultType: cst.RETURN_TYPE_LISK_TRX_ERROR});
+            return;
+        }
 
-        res.json({result: true});
+        // 送信後の枚数計算
+        const fee = utils.divide(trx.fee, 100000000);
+        const amount = utils.minus(utils.minus(senderInfo.amount, req.body.amount), fee);
+        if (+amount <= 0) {
+            res.json({result: true, resultType: cst.RETURN_TYPE_NOT_ENOUGH});
+            return;
+        }
+
+        // broadcast
+        const result = await config.LiskClient.transactions.broadcast(trx);
+        if (utils.isEmpty(result)) {
+            res.json({result: true, resultType: cst.RETURN_TYPE_LISK_TRX_ERROR});
+            return;
+        }
+
+        // 送信者の枚数更新＆履歴登録
+        await user.updateAmount(req.body.senderId, amount);
+        await history.insert(req.body.senderId, req.body.liskAddress, utils.num2str(req.body.amount), cst.TYPE_SEND);
+        await history.insert(req.body.senderId, req.body.liskAddress, fee, cst.TYPE_FEE);
+
+        res.json({result: true, id: trx.id, balance: amount, fee: fee});
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
         console.log(err);
