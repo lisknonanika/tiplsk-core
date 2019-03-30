@@ -20,7 +20,7 @@ const router = express.Router();
 app.use('/core', router);
 
 /**
- * Find User By ID and PW
+ * 認証処理
  */
 router.post('/auth', function(req, res) {
     (async () => {
@@ -42,7 +42,7 @@ router.post('/auth', function(req, res) {
 });
 
 /**
- * Find User By TwitterID
+ * ユーザー検索処理
  */
 router.get('/user', verify, function(req, res) {
     (async () => {
@@ -50,11 +50,13 @@ router.get('/user', verify, function(req, res) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
             return;
         }
-        const result = await user.find({twitterId: req.query.twitterId});
-        result.result = true;
-        result.userId = result._id;
-        delete result._id;
-        delete result.password;
+        const userInfo = await user.find({twitterId: req.query.twitterId});
+        const result = {
+            result: true,
+            userId: userInfo._id.toHexString(),
+            twitterId: userInfo.twitterId,
+            amount: userInfo.amount
+        }
         res.json(result);
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
@@ -63,7 +65,7 @@ router.get('/user', verify, function(req, res) {
 });
 
 /**
- * Find History By TwitterID
+ * 履歴検索処理
  */
 router.get('/history', verify, function(req, res) {
     (async () => {
@@ -73,11 +75,11 @@ router.get('/history', verify, function(req, res) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
             return;
         }
-        const result = await history.find({twitterId: req.query.twitterId}, +offset, +limit > 100? 100: +limit);
-        result.map(element => {
+        const histories = await history.find({twitterId: req.query.twitterId}, +offset, +limit > 100? 100: +limit);
+        histories.map(element => {
             delete element._id;
         });
-        res.json({result: true, datas: result});
+        res.json({result: true, datas: histories});
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
         console.log(err);
@@ -85,7 +87,7 @@ router.get('/history', verify, function(req, res) {
 });
 
 /**
- * tip
+ * チップ処理
  */
 router.put('/tip', verify, function(req, res) {
     (async () => {
@@ -135,7 +137,7 @@ router.put('/tip', verify, function(req, res) {
 });
 
 /**
- * withdraw
+ * 出金処理
  */
 router.put('/withdraw', verify, function(req, res) {
     (async () => {
@@ -180,6 +182,115 @@ router.put('/withdraw', verify, function(req, res) {
         await history.insert(req.body.senderId, req.body.liskAddress, fee, cst.TYPE_FEE);
 
         res.json({result: true, id: trx.id, balance: amount, fee: fee});
+    })().catch((err) => {
+        res.json({result: false, error: "Error!"});
+        console.log(err);
+    });
+});
+
+/**
+ * WEBアクセス情報取得処理
+ */
+router.get('/webaccess', verify, function(req, res) {
+    (async () => {
+        if (!req.query || !req.query.twitterId) {
+            res.json({result: false, error: 'Required parameter missing or invalid'});
+            return;
+        }
+
+        // ユーザーがいなければ作成
+        let userInfo = await user.find({twitterId: req.query.twitterId});
+        if (utils.isEmpty(userInfo)) {
+            await user.createUser(req.query.twitterId);
+            userInfo = await user.find({twitterId: req.query.twitterId});
+        }
+        let result = {userId: userInfo._id.toHexString()}
+
+        // パスワードが未設定なら仮パスワード生成
+        if (utils.isEmpty(userInfo.password)) {
+            const password = utils.createPassword();
+            await user.updatePassword(req.query.twitterId, password);
+            result.password = password;
+        }
+
+        res.json(result);
+    })().catch((err) => {
+        res.json({result: false, error: "Error!"});
+        console.log(err);
+    });
+});
+
+/**
+ * パスワード変更処理
+ */
+router.put('/changepassword', verify, function(req, res) {
+    (async () => {
+        if (!req.query || !req.query.twitterId || !req.query.pw) {
+            res.json({result: false, error: 'Required parameter missing or invalid'});
+            return;
+        }
+        await user.updatePassword(req.query.twitterId, req.query.pw);
+        res.json({result: true});
+    })().catch((err) => {
+        res.json({result: false, error: "Error!"});
+        console.log(err);
+    });
+});
+
+/**
+ * Twitter制限回避用コレクション更新処理
+ */
+router.put('/limit', verify, function(req, res) {
+    (async () => {
+        
+        // TODO
+
+        res.json({result: true});
+    })().catch((err) => {
+        res.json({result: false, error: "Error!"});
+        console.log(err);
+    });
+});
+
+/**
+ * メンションツイートID登録処理
+ */
+router.put('/mentionhistory', verify, function(req, res) {
+    (async () => {
+        
+        // TODO
+        
+        res.json({result: true});
+    })().catch((err) => {
+        res.json({result: false, error: "Error!"});
+        console.log(err);
+    });
+});
+
+/**
+ * 最新メンションツイートID更新処理
+ */
+router.put('/latestmention', verify, function(req, res) {
+    (async () => {
+        
+        // TODO
+        
+        res.json({result: true});
+    })().catch((err) => {
+        res.json({result: false, error: "Error!"});
+        console.log(err);
+    });
+});
+
+/**
+ * LiskトランザクションID履歴更新処理
+ */
+router.put('/liskhistory', verify, function(req, res) {
+    (async () => {
+        
+        // TODO
+        
+        res.json({result: true});
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
         console.log(err);
