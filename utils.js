@@ -5,14 +5,14 @@ const cst = require('./const');
 /**
  * Check Empty
  */
-module.exports.isEmpty = function(val) {
+module.exports.isEmpty = (val) => {
     return !val || Object.keys(val).length === 0;
 }
 
 /**
  * Check Number
  */
-module.exports.isNumber = function(val) {
+module.exports.isNumber = (val) => {
     const regex = new RegExp(/^[0-9]+$/);
     return regex.test(val); 
 }
@@ -20,7 +20,7 @@ module.exports.isNumber = function(val) {
 /**
  * Check Decimal
  */
-module.exports.isDecimal = function(val) {
+module.exports.isDecimal = (val) => {
     const regex = new RegExp(/^(0|[1-9]\d*)(\.\d+)?$/);
     return regex.test(val); 
 }
@@ -28,14 +28,14 @@ module.exports.isDecimal = function(val) {
 /**
  * Number -> String
  */
-module.exports.num2str = function(val) {
+module.exports.num2str = (val) => {
     return new BigNumber(val).toFixed();
 }
 
 /**
  * val1 + val2
  */
-module.exports.plus = function(val1, val2) {
+module.exports.plus = (val1, val2) => {
     const d1 = new BigNumber(val1);
     const d2 = new BigNumber(val2);
     return d1.plus(d2).toFixed();
@@ -44,7 +44,7 @@ module.exports.plus = function(val1, val2) {
 /**
  * val1 - val2
  */
-module.exports.minus = function(val1, val2) {
+module.exports.minus = (val1, val2) => {
     const d1 = new BigNumber(val1);
     const d2 = new BigNumber(val2);
     return d1.minus(d2).toFixed();
@@ -53,7 +53,7 @@ module.exports.minus = function(val1, val2) {
 /**
  * val1 / val2
  */
-module.exports.divide = function(val1, val2) {
+module.exports.divide = (val1, val2) => {
     const d1 = new BigNumber(val1);
     const d2 = new BigNumber(val2);
     return d1.dividedBy(d2).toFixed();
@@ -62,7 +62,7 @@ module.exports.divide = function(val1, val2) {
 /**
  * val1 * val2
  */
-module.exports.multiply = function(val1, val2) {
+module.exports.multiply = (val1, val2) => {
     const d1 = new BigNumber(val1);
     const d2 = new BigNumber(val2);
     return d1.multipliedBy(d2).toFixed();
@@ -71,14 +71,14 @@ module.exports.multiply = function(val1, val2) {
 /**
  * sha256
  */
-module.exports.sha256 = function(val) {
+module.exports.sha256 = (val) => {
     return CryptoJs.SHA256(val).toString();
 }
 
 /**
  * create password
  */
-module.exports.createPassword = function() {
+module.exports.createPassword = () => {
     let password = '';
     for(let i=0; i<cst.PASSWORD_LENGTH; i++){
         password += cst.PASSWORD_CHAR[Math.floor(Math.random()*key.length)];

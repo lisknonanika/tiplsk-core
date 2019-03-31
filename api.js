@@ -189,6 +189,46 @@ router.put('/withdraw', verify, function(req, res) {
 });
 
 /**
+ * 入金処理
+ */
+router.put('/deposit', verify, function(req, res) {
+    (async () => {
+        // 処理済のトランザクションIDを取得
+        const trx = await liskTrx.find();
+        const trxId =  utils.isEmpty(trx)? '': trx.transactionId;
+
+        // 処理済のトランザクションより新しいトランザクションの情報を取得
+        const trxInfo = await liskTransaction.getTransactionInfo(trxId);
+        if (utils.isEmpty(trxInfo)) return {result: true, target: []};
+
+        // 最新トランザクションIDに更新
+        await liskTrx.update(trxInfo[0].id);
+    
+        let depositTarget = [];
+        for (let i=0; i<trxInfo.length; i++) {
+            const key = trxInfo[i].asset.data;
+            if (utils.isEmpty(key) || !config.regexp.depositKey.test(key)) continue;
+            
+            // depositKeyでユーザー検索
+            const userInfo = await user.find({_id: ObjectId(key)});
+            if (utils.isEmpty(userInfo)) continue;
+    
+            // ユーザー情報更新&履歴登録
+            const deposit = utils.divide(trxInfo[i].amont, 100000000);
+            await user.updateAmount(userInfo.twitterId, utils.plus(userInfo.amont, deposit));
+            await history.insert(userInfo.twitterId, trxInfo[i].senderId, deposit, cst.TYPE_RECEIVE);
+    
+            // 処理したユーザーのTwitterIDを格納
+            depositTarget.push(userInfo.twitterId);
+        }
+        res.json({result: true, target: depositTarget});
+    })().catch((err) => {
+        res.json({result: false, error: "Error!"});
+        console.log(err);
+    });
+});
+
+/**
  * WEBアクセス情報取得処理
  */
 router.get('/webaccess', verify, function(req, res) {
@@ -230,51 +270,6 @@ router.put('/changepassword', verify, function(req, res) {
             return;
         }
         await user.updatePassword(req.query.twitterId, req.query.pw);
-        res.json({result: true});
-    })().catch((err) => {
-        res.json({result: false, error: "Error!"});
-        console.log(err);
-    });
-});
-
-/**
- * Twitter制限回避用コレクション更新処理
- */
-router.put('/limit', verify, function(req, res) {
-    (async () => {
-        
-        // TODO
-
-        res.json({result: true});
-    })().catch((err) => {
-        res.json({result: false, error: "Error!"});
-        console.log(err);
-    });
-});
-
-/**
- * メンションツイートID登録処理
- */
-router.put('/mentionhistory', verify, function(req, res) {
-    (async () => {
-        
-        // TODO
-        
-        res.json({result: true});
-    })().catch((err) => {
-        res.json({result: false, error: "Error!"});
-        console.log(err);
-    });
-});
-
-/**
- * 最新メンションツイートID更新処理
- */
-router.put('/latestmention', verify, function(req, res) {
-    (async () => {
-        
-        // TODO
-        
         res.json({result: true});
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
