@@ -1,6 +1,6 @@
 const BigNumber = require('bignumber.js');
 const CryptoJs = require('crypto-js');
-const cst = require('./const');
+const config = require('./config');
 
 /**
  * Check Empty
@@ -80,8 +80,8 @@ module.exports.sha256 = (val) => {
  */
 module.exports.createPassword = () => {
     let password = '';
-    for(let i=0; i<cst.PASSWORD_LENGTH; i++){
-        password += cst.PASSWORD_CHAR[Math.floor(Math.random()*key.length)];
+    for(let i=0; i<config.passwordLength; i++){
+        password += config.passwordChar[Math.floor(Math.random()*config.passwordChar.length)];
     }
     return password;
 }

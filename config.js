@@ -14,7 +14,13 @@ const define = (name, value) => {
 // App Setting
 define('mode', config.mode);
 define('secret', config.secret);
-define('regexp', {"depositKey": new RegExp(/(^[0-9a-zA-Z]{12,12}$)|(^[0-9a-zA-Z]{24,24}$)/)});
+define('regexp', {
+    'depositKey': new RegExp(/(^[0-9a-zA-Z]{12,12}$)|(^[0-9a-zA-Z]{24,24}$)/),
+    'password': new RegExp(/(^[0-9a-zA-Z\-_@=+!]{8,}$)/)
+});
+define('listenPort', 3000);
+define('passwordLength', 16);
+define('passwordChar', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_@=+!');
 
 // Lisk Setting
 define('lisk', config.lisk);

@@ -6,8 +6,8 @@ const config = require('./config');
 const utils = require('./utils');
 const user = require('./db/user');
 const history = require('./db/history');
+const liskTrx = require('./db/lisktrx');
 const liskTransaction = require('./lisk/transaction');
-const verify = require('./verify');
 const cst = require('./const');
 
 const app = express();
@@ -33,7 +33,7 @@ router.post('/auth', function(req, res) {
             res.json({result: false, error: "Authentication failed."});
             return;
         }
-        const token = jwt.sign({twitterId: result.twitterId}, app.get('secret'), {expiresIn: 300});
+        const token = jwt.sign({twitterId: result.twitterId}, app.get('secret'), {expiresIn: 86400});
         res.json({result: true, token: token});
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
@@ -44,7 +44,7 @@ router.post('/auth', function(req, res) {
 /**
  * ユーザー検索処理
  */
-router.get('/user', verify, function(req, res) {
+router.get('/user', function(req, res) {
     (async () => {
         if (!req.query || !req.query.twitterId) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
@@ -67,7 +67,7 @@ router.get('/user', verify, function(req, res) {
 /**
  * 履歴検索処理
  */
-router.get('/history', verify, function(req, res) {
+router.get('/history', function(req, res) {
     (async () => {
         const offset = !req.query.offset? 0: req.query.offset;
         const limit = !req.query.limit? 20: req.query.limit;
@@ -89,7 +89,7 @@ router.get('/history', verify, function(req, res) {
 /**
  * チップ処理
  */
-router.put('/tip', verify, function(req, res) {
+router.put('/tip', function(req, res) {
     (async () => {
         if (!req.body || !utils.isDecimal(req.body.amount) ||
             !req.body.senderId || !req.body.senderNm || 
@@ -139,7 +139,7 @@ router.put('/tip', verify, function(req, res) {
 /**
  * 出金処理
  */
-router.put('/withdraw', verify, function(req, res) {
+router.put('/withdraw', function(req, res) {
     (async () => {
         if (!req.body || !req.body.senderId || !req.body.liskAddress || !utils.isDecimal(req.body.amount)) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
@@ -191,7 +191,7 @@ router.put('/withdraw', verify, function(req, res) {
 /**
  * 入金処理
  */
-router.put('/deposit', verify, function(req, res) {
+router.put('/deposit', function(req, res) {
     (async () => {
         // 処理済のトランザクションIDを取得
         const trx = await liskTrx.find();
@@ -199,7 +199,10 @@ router.put('/deposit', verify, function(req, res) {
 
         // 処理済のトランザクションより新しいトランザクションの情報を取得
         const trxInfo = await liskTransaction.getTransactionInfo(trxId);
-        if (utils.isEmpty(trxInfo)) return {result: true, target: []};
+        if (utils.isEmpty(trxInfo)) {
+            res.json({result: true, target: []});
+            return;
+        }
 
         // 最新トランザクションIDに更新
         await liskTrx.update(trxInfo[0].id);
@@ -231,7 +234,7 @@ router.put('/deposit', verify, function(req, res) {
 /**
  * WEBアクセス情報取得処理
  */
-router.get('/webaccess', verify, function(req, res) {
+router.get('/webaccess', function(req, res) {
     (async () => {
         if (!req.query || !req.query.twitterId) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
@@ -263,13 +266,13 @@ router.get('/webaccess', verify, function(req, res) {
 /**
  * パスワード変更処理
  */
-router.put('/changepassword', verify, function(req, res) {
+router.put('/changepassword', function(req, res) {
     (async () => {
-        if (!req.query || !req.query.twitterId || !req.query.pw) {
+        if (!req.body || !req.body.twitterId || !req.body.pw || !config.regexp.password.test(req.body.pw)) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
             return;
         }
-        await user.updatePassword(req.query.twitterId, req.query.pw);
+        await user.updatePassword(req.body.twitterId, req.body.pw);
         res.json({result: true});
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
@@ -277,20 +280,5 @@ router.put('/changepassword', verify, function(req, res) {
     });
 });
 
-/**
- * LiskトランザクションID履歴更新処理
- */
-router.put('/liskhistory', verify, function(req, res) {
-    (async () => {
-        
-        // TODO
-        
-        res.json({result: true});
-    })().catch((err) => {
-        res.json({result: false, error: "Error!"});
-        console.log(err);
-    });
-});
-
-app.listen(53000);
+app.listen(config.listenPort);
 console.log('TipLisk Core Start');
