@@ -25,10 +25,10 @@ define('passwordChar', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123
 // Lisk Setting
 define('lisk', config.lisk);
 if (config.mode === 'test') {
-    console.log('test mode!');
+    console.log('connect Lisk Testnet!');
     define('LiskClient', lisk.APIClient.createTestnetAPIClient());
 } else {
-    console.log('releae mode!');
+    console.log('connect Lisk Mainnet!');
     define('LiskClient', lisk.APIClient.createMainnetAPIClient());
 }
 define('LiskTransaction', liskTransaction);

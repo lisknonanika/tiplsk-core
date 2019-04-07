@@ -281,4 +281,4 @@ router.put('/changepassword', function(req, res) {
 });
 
 app.listen(config.listenPort);
-console.log('TipLisk Core Start');
+console.log(`TipLisk Core Start (mode: ${config.mode})`);
