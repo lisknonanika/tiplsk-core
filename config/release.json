@@ -13,9 +13,6 @@
         "password": "",
         "collectionUser": "",
         "collectionHistory": "",
-        "collectionLiskTrx": "",
-        "collectionMentionId": "",
-        "collectionLimitCtrl": "",
-        "collectionFriends": ""
+        "collectionLiskTrx": ""
     }
 }
