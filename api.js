@@ -10,7 +10,6 @@ const liskTransaction = require('./lisk/transaction');
 const cst = require('./const');
 
 const app = express();
-app.set('secret', config.secret);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(helmet());
