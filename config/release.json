@@ -1,6 +1,5 @@
 {
     "mode": "release",
-    "secret": "",
     "lisk": {
         "address": "",
         "passphrase": "",

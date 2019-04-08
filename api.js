@@ -1,6 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
 const config = require('./config');
 const utils = require('./utils');
@@ -33,8 +32,7 @@ router.post('/auth', function(req, res) {
             res.json({result: false, error: "Authentication failed."});
             return;
         }
-        const token = jwt.sign({twitterId: result.twitterId}, app.get('secret'), {expiresIn: 86400});
-        res.json({result: true, token: token});
+        res.json({result: true, twitterId: result.twitterId});
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
         console.log(err);
