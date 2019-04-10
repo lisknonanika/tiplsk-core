@@ -263,7 +263,7 @@ router.get('/webaccess', function(req, res) {
 /**
  * パスワード変更処理
  */
-router.put('/changepassword', function(req, res) {
+router.put('/password', function(req, res) {
     (async () => {
         if (!req.body || !req.body.twitterId || !req.body.pw || !config.regexp.password.test(req.body.pw)) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
