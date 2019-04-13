@@ -27,7 +27,7 @@ router.post('/auth', function(req, res) {
             return;
         }
         const result = await user.find({_id: req.body.id});
-        if (!result || !result.password || result.password !== utils.sha256(req.body.pw)) {
+        if (utils.isEmpty(result) || !result.password || result.password !== utils.sha256(req.body.pw)) {
             res.json({result: false, error: "Authentication failed."});
             return;
         }
@@ -50,15 +50,36 @@ router.get('/user', function(req, res) {
         const userInfo = await user.find({twitterId: req.query.twitterId});
         if (utils.isEmpty(userInfo)) {
             res.json({result: false, error: "Not Found"});
-        } else {
-            const result = {
-                result: true,
-                userId: userInfo._id.toHexString(),
-                twitterId: userInfo.twitterId,
-                amount: userInfo.amount
-            }
-            res.json(result);
+            return;
         }
+
+        const result = {
+            result: true,
+            userId: userInfo._id.toHexString(),
+            twitterId: userInfo.twitterId,
+            amount: userInfo.amount
+        }
+        res.json(result);
+    })().catch((err) => {
+        res.json({result: false, error: "Error!"});
+        console.log(err);
+    });
+});
+
+/**
+ * ユーザー作成処理
+ */
+router.put('/user', function(req, res) {
+    (async () => {
+        if (!req.body.twitterId) {
+            res.json({result: false, error: 'Required parameter missing or invalid'});
+            return;
+        }
+        const userInfo = await user.find({twitterId: req.body.twitterId});
+        if (utils.isEmpty(userInfo)) {
+            await user.createUser(req.body.twitterId);
+        }
+        res.json({result: true});
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
         console.log(err);
@@ -102,8 +123,7 @@ router.put('/tip', function(req, res) {
         // 送信者の情報を取得
         const senderInfo = await user.find({twitterId: req.body.senderId});
         if (utils.isEmpty(senderInfo)) {
-            await user.createUser(req.body.senderId);
-            res.json({result: true, resultType: cst.RETURN_TYPE_NOT_ENOUGH});
+            res.json({result: false, error: "Not Found"});
             return;
         }
 
@@ -150,8 +170,7 @@ router.put('/withdraw', function(req, res) {
         // 送信者の情報を取得
         const senderInfo = await user.find({twitterId: req.body.senderId});
         if (utils.isEmpty(senderInfo)) {
-            await user.createUser(req.body.senderId);
-            res.json({result: true, resultType: cst.RETURN_TYPE_NOT_ENOUGH});
+            res.json({result: false, error: "Not Found"});
             return;
         }
         
@@ -242,21 +261,20 @@ router.get('/webaccess', function(req, res) {
             return;
         }
 
-        // ユーザーがいなければ作成
-        let userInfo = await user.find({twitterId: req.query.twitterId});
+        // ユーザーを検索
+        const userInfo = await user.find({twitterId: req.query.twitterId});
         if (utils.isEmpty(userInfo)) {
-            await user.createUser(req.query.twitterId);
-            userInfo = await user.find({twitterId: req.query.twitterId});
+            res.json({result: false, error: "Not Found"});
+            return;
         }
-        let result = {userId: userInfo._id.toHexString()}
+        let result = {result: true, userId: userInfo._id.toHexString()}
 
         // パスワードが未設定なら仮パスワード生成
-        if (utils.isEmpty(userInfo.password)) {
+        if (!userInfo.password) {
             const password = utils.createPassword();
             await user.updatePassword(req.query.twitterId, password);
             result.password = password;
         }
-
         res.json(result);
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
