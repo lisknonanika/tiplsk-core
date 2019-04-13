@@ -1,6 +1,6 @@
-const config = require('../config');
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectId;
+const config = require('../config');
 const utils = require('../utils');
 
 module.exports.find = async(params) => {

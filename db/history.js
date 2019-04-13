@@ -1,5 +1,5 @@
-const config = require('../config');
 const MongoClient = require('mongodb').MongoClient;
+const config = require('../config');
 const utils = require('../utils');
 
 module.exports.find = async(params, offset, limit) => {
@@ -23,7 +23,7 @@ module.exports.insert = async(twitterId, targetNm, amount, type) => {
                         type: type,
                         amount: utils.num2str(amount),
                         targetNm: targetNm,
-                        execDate: new Date()};;
+                        execDate: new Date()};
         await tbl.insertOne(params);
         return {result: true};
     } finally {

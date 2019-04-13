@@ -1,5 +1,5 @@
-const config = require('../config');
 const MongoClient = require('mongodb').MongoClient;
+const config = require('../config');
 
 module.exports.find = async() => {
     const con = await MongoClient.connect(config.mongo.url, config.mongoClientParams);
