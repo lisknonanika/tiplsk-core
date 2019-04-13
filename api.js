@@ -48,13 +48,17 @@ router.get('/user', function(req, res) {
             return;
         }
         const userInfo = await user.find({twitterId: req.query.twitterId});
-        const result = {
-            result: true,
-            userId: userInfo._id.toHexString(),
-            twitterId: userInfo.twitterId,
-            amount: userInfo.amount
+        if (utils.isEmpty(userInfo)) {
+            res.json({result: false, error: "Not Found"});
+        } else {
+            const result = {
+                result: true,
+                userId: userInfo._id.toHexString(),
+                twitterId: userInfo.twitterId,
+                amount: userInfo.amount
+            }
+            res.json(result);
         }
-        res.json(result);
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
         console.log(err);
