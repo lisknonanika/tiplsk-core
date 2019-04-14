@@ -20,7 +20,7 @@ app.use('/core', router);
 /**
  * 認証処理
  */
-router.post('/auth', function(req, res) {
+router.post('/auth', (req, res) => {
     (async () => {
         if (!req.body || !req.body.id || !req.body.pw) {
             res.json({result: false, error: 'Required parameter missing or invalid.'});
@@ -41,7 +41,7 @@ router.post('/auth', function(req, res) {
 /**
  * ユーザー検索処理
  */
-router.get('/user', function(req, res) {
+router.get('/user', (req, res) => {
     (async () => {
         if (!req.query || !req.query.twitterId) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
@@ -69,7 +69,7 @@ router.get('/user', function(req, res) {
 /**
  * ユーザー作成処理
  */
-router.put('/user', function(req, res) {
+router.put('/user', (req, res) => {
     (async () => {
         if (!req.body.twitterId) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
@@ -89,7 +89,7 @@ router.put('/user', function(req, res) {
 /**
  * 履歴検索処理
  */
-router.get('/history', function(req, res) {
+router.get('/history', (req, res) => {
     (async () => {
         const offset = !req.query.offset? 0: req.query.offset;
         const limit = !req.query.limit? 20: req.query.limit;
@@ -111,7 +111,7 @@ router.get('/history', function(req, res) {
 /**
  * チップ処理
  */
-router.put('/tip', function(req, res) {
+router.put('/tip', (req, res) => {
     (async () => {
         if (!req.body || !utils.isDecimal(req.body.amount) ||
             !req.body.senderId || !req.body.senderNm || 
@@ -160,7 +160,7 @@ router.put('/tip', function(req, res) {
 /**
  * 出金処理
  */
-router.put('/withdraw', function(req, res) {
+router.put('/withdraw', (req, res) => {
     (async () => {
         if (!req.body || !req.body.senderId || !req.body.liskAddress || !utils.isDecimal(req.body.amount)) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
@@ -211,7 +211,7 @@ router.put('/withdraw', function(req, res) {
 /**
  * 入金処理
  */
-router.put('/deposit', function(req, res) {
+router.put('/deposit', (req, res) => {
     (async () => {
         // 処理済のトランザクションIDを取得
         const trx = await liskTrx.find();
@@ -254,7 +254,7 @@ router.put('/deposit', function(req, res) {
 /**
  * WEBアクセス情報取得処理
  */
-router.get('/webaccess', function(req, res) {
+router.get('/webaccess', (req, res) => {
     (async () => {
         if (!req.query || !req.query.twitterId) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
@@ -285,7 +285,7 @@ router.get('/webaccess', function(req, res) {
 /**
  * パスワード変更処理
  */
-router.put('/password', function(req, res) {
+router.put('/password', (req, res) => {
     (async () => {
         if (!req.body || !req.body.twitterId || !req.body.pw || !config.regexp.password.test(req.body.pw)) {
             res.json({result: false, error: 'Required parameter missing or invalid'});
