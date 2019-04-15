@@ -1,3 +1,4 @@
+const ObjectId = require('mongodb').ObjectId;
 const express = require('express');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
@@ -228,7 +229,7 @@ router.put('/deposit', (req, res) => {
         await liskTrx.update(trxInfo[0].id);
     
         let depositTarget = [];
-        for (let i=0; i<trxInfo.length; i++) {
+        for (i = 0; i < trxInfo.length; i++) {
             const key = trxInfo[i].asset.data;
             if (utils.isEmpty(key) || !config.regexp.depositKey.test(key)) continue;
             
@@ -241,10 +242,10 @@ router.put('/deposit', (req, res) => {
             await user.updateAmount(userInfo.twitterId, utils.plus(userInfo.amont, deposit));
             await history.insert(userInfo.twitterId, trxInfo[i].senderId, deposit, cst.TYPE_RECEIVE);
     
-            // 処理したユーザーのTwitterIDを格納
-            depositTarget.push(userInfo.twitterId);
+            // 処理したトランザクションの情報を格納
+            depositTarget.push({trxId: trxInfo[0].id, twitterId: userInfo.twitterId, amount: deposit});
         }
-        res.json({result: true, target: depositTarget});
+        res.json({result: true, data: depositTarget});
     })().catch((err) => {
         res.json({result: false, error: "Error!"});
         console.log(err);
