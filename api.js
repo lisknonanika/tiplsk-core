@@ -221,7 +221,7 @@ router.put('/deposit', (req, res) => {
         // 処理済のトランザクションより新しいトランザクションの情報を取得
         const trxInfo = await liskTransaction.getTransactionInfo(trxId);
         if (utils.isEmpty(trxInfo)) {
-            res.json({result: true, target: []});
+            res.json({result: true, data: []});
             return;
         }
 
@@ -238,12 +238,12 @@ router.put('/deposit', (req, res) => {
             if (utils.isEmpty(userInfo)) continue;
     
             // ユーザー情報更新&履歴登録
-            const deposit = utils.divide(trxInfo[i].amont, 100000000);
-            await user.updateAmount(userInfo.twitterId, utils.plus(userInfo.amont, deposit));
+            const deposit = utils.divide(trxInfo[i].amount, 100000000);
+            await user.updateAmount(userInfo.twitterId, utils.plus(userInfo.amount, deposit));
             await history.insert(userInfo.twitterId, trxInfo[i].senderId, deposit, cst.TYPE_RECEIVE);
     
             // 処理したトランザクションの情報を格納
-            depositTarget.push({trxId: trxInfo[0].id, twitterId: userInfo.twitterId, amount: deposit});
+            depositTarget.push({trxId: trxInfo[i].id, twitterId: userInfo.twitterId, amount: deposit});
         }
         res.json({result: true, data: depositTarget});
     })().catch((err) => {
