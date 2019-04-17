@@ -300,5 +300,23 @@ router.put('/password', (req, res) => {
     });
 });
 
+/**
+ * パスワードリセット処理
+ */
+router.put('/resetpw', (req, res) => {
+    (async () => {
+        if (!req.body || !req.body.twitterId) {
+            res.json({result: false, error: 'Required parameter missing or invalid'});
+            return;
+        }
+        const password = utils.createPassword();
+        await user.updatePassword(req.body.twitterId, password);
+        res.json({result: true, password: password});
+    })().catch((err) => {
+        res.json({result: false, error: "Error!"});
+        console.log(err);
+    });
+});
+
 app.listen(config.listenPort);
 console.log(`TipLisk Core Start (mode: ${config.mode})`);
