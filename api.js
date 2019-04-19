@@ -130,7 +130,7 @@ router.put('/tip', (req, res) => {
 
         // 送信後の枚数計算
         const senderAmount = utils.minus(senderInfo.amount, req.body.amount);
-        if (+senderAmount <= 0) {
+        if (+senderAmount < 0) {
             res.json({result: true, resultType: cst.RETURN_TYPE_NOT_ENOUGH});
             return;
         }
@@ -185,7 +185,7 @@ router.put('/withdraw', (req, res) => {
         // 送信後の枚数計算
         const fee = utils.divide(trx.fee, 100000000);
         const amount = utils.minus(utils.minus(senderInfo.amount, req.body.amount), fee);
-        if (+amount <= 0) {
+        if (+amount < 0) {
             res.json({result: true, resultType: cst.RETURN_TYPE_NOT_ENOUGH});
             return;
         }
