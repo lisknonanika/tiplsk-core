@@ -6,7 +6,7 @@ const config = require('./config');
  * Check Empty
  */
 module.exports.isEmpty = (val) => {
-    return val == null || val.length === 0 || Object.keys(val).length === 0;
+    return val == null || val.length === 0 || JSON.stringify(val) === "{}";
 }
 
 /**
