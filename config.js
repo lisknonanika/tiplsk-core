@@ -13,7 +13,6 @@ const define = (name, value) => {
 
 // App Setting
 define('mode', config.mode);
-define('secret', config.secret);
 define('regexp', {
     'depositKey': new RegExp(/(^[0-9a-zA-Z]{12,12}$)|(^[0-9a-zA-Z]{24,24}$)/),
     'password': new RegExp(/(^[0-9a-zA-Z\-_@=+!]{8,}$)/)
