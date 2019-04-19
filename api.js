@@ -135,7 +135,7 @@ router.put('/tip', (req, res) => {
             return;
         }
 
-        // 受診者の情報を取得
+        // 受信者の情報を取得
         const receiptInfo = await user.find({twitterId: req.body.receiptId});
         if (utils.isEmpty(receiptInfo)) {
             await user.createUser(req.body.receiptId);
