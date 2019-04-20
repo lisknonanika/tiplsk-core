@@ -23,7 +23,8 @@ app.use('/core', router);
  */
 router.post('/auth', (req, res) => {
     (async () => {
-        if (!req.body || !req.body.id || !req.body.pw) {
+        if (!req.body || !req.body.id || !req.body.pw ||
+            !config.regexp.depositKey.test(req.body.id)) {
             res.json({result: false, error: 'Required parameter missing or invalid.'});
             return;
         }
